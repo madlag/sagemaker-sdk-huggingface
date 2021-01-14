@@ -6,7 +6,7 @@ datasets_version=1.1.3
 
 # image variables
 image_type=training
-container_name=huggingface-$image_type
+container_name=huggingface-nn-pruning-$image_type
 device=cpu
                       
 # container versions/tags
@@ -15,9 +15,9 @@ cpu_tag=$version-cpu-transformers$transformers_version-datasets$datasets_version
 gpu_tag=$version-gpu-transformers$transformers_version-datasets$datasets_version-cu110
 
 # aws parameters
-aws_account_id=558105141721
+aws_account_id=854676674973
 aws_profile=default
-aws_region=eu-central-1
+aws_region=eu-west-1
 
 #registry parameters
 ecr_url=$aws_account_id.dkr.ecr.$aws_region.amazonaws.com
@@ -36,7 +36,7 @@ while (( $# > 1 )); do case $1 in
 done
 
 # can be run only once! public repositories has to be created in us-east-1
-aws ecr create-repository --repository-name $container_name  --profile $aws_profile --region $aws_region   > /dev/null
+#aws ecr create-repository --repository-name $container_name  --profile $aws_profile --region $aws_region   > /dev/null
 
 # Starting print 
 echo "####################### Build and Push HuggingFace Sagemaker Container #######################"
@@ -111,7 +111,6 @@ else
 fi
 
 # push docker to registry
-echo "pushing build docker image"
+echo "pushing build docker image $ecr_url/$container_name:$tag"
 docker push $ecr_url/$container_name:$tag
-
 

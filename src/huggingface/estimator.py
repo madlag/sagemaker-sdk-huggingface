@@ -34,6 +34,7 @@ class HuggingFace(Framework):
     # FIXME: Sagemaker currently only supports images from private ecr not public ecr
     # _public_ecr_template_string = "public.ecr.aws/t6m7g5n4/huggingface-{type}:0.0.1-{device}-transformers{transformers_version}-datasets{datasets_version}"
     _ecr_template_string = "558105141721.dkr.ecr.eu-central-1.amazonaws.com/huggingface-{type}:0.0.1-{device}-transformers{transformers_version}-datasets{datasets_version}"
+    _ecr_template_string = "854676674973.dkr.ecr.eu-west-1.amazonaws.com/huggingface-nn-pruning-training:0.0.1-gpu-transformers4.1.1-datasets1.1.3-cu110"
 
     def __init__(
         self,
@@ -109,6 +110,8 @@ class HuggingFace(Framework):
                 f"estimator initialized with HuggingFace Token, model will be uploaded to hub using the {self.base_job_name} as repostiory name"
             )
             self.huggingface_token = huggingface_token
+        else:
+            self.huggingface_token = None
 
     def download_model(self, local_path=".", unzip=False):
         os.makedirs(local_path, exist_ok=True)

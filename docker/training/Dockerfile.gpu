@@ -128,6 +128,7 @@ WORKDIR /opt/pytorch
 COPY build_artifacts/changehostname.c /
 COPY build_artifacts/start_with_right_hostname.sh /usr/local/bin/start_with_right_hostname.sh
 
+
 WORKDIR /root
 
 RUN /opt/conda/bin/conda config --set ssl_verify False \
@@ -184,6 +185,9 @@ RUN apt-get update \
  && echo "    StrictHostKeyChecking no" >> /etc/ssh/ssh_config.new \
  && mv /etc/ssh/ssh_config.new /etc/ssh/ssh_config \
  && rm -rf /var/lib/apt/lists/*
+
+COPY build_artifacts/nn_pruning nn_pruning
+RUN cd nn_pruning && ls && pip install -e .
 
 WORKDIR /
 

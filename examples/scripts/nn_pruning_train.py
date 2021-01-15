@@ -72,9 +72,12 @@ if __name__ == "__main__":
     # hyperparameters sent by the client are passed as command-line arguments to the script.
     parser.add_argument("--num-train-epochs", type=float, default=20)
     parser.add_argument("--per-device-train-batch-size", type=int, default=16)
+    parser.add_argument("--logging-steps", type=int, default=250)
 
     # Data, model, and output directories
-    parser.add_argument("--output_dir", type=str, default=os.environ["SM_MODEL_DIR"])
+    parser.add_argument("--model-dir", type=str, default=os.environ["SM_MODEL_DIR"])
+    parser.add_argument("--output-dir", type=str, default=os.environ["SM_OUTPUT_DIR"])
+
 
     parser.add_argument("--final-warmup", type=int, default=10)
     parser.add_argument("--regularization-final-lambda", type=float, default=10)
@@ -107,9 +110,10 @@ if __name__ == "__main__":
         param_dict[key] = val
 
     set_key(param_dict, "num_train_epochs", args.num_train_epochs)
+    set_key(param_dict, "logging_steps", args.logging_steps)
 
     set_key(param_dict, "per_device_train_batch_size", args.per_device_train_batch_size)
-    set_key(param_dict, "output_dir", args.output_dir)
+    set_key(param_dict, "output_dir", args.model_dir)
     set_key(param_dict, "logging_dir", args.output_dir)
     set_key(param_dict, "final_warmup", args.final_warmup)
 
@@ -143,16 +147,21 @@ if __name__ == "__main__":
     transformers.utils.logging.enable_explicit_format()
     logger.info(f"Training/evaluation parameters {param_dict}")
 
-    main(param_dict)
+    import os
 
-    if False:
-        # writes eval result to file which can be accessed later in s3 ouput
-        with open(
-            os.path.join(args.output_data_dir, "eval_results.txt"), "w"
-        ) as writer:
-            print(f"***** Eval results *****")
-            for key, value in sorted(eval_result.items()):
-                writer.write(f"{key} = {value}\n")
+    def ls_opt(prefix):
+        for root, dirs, files in os.walk("/opt/ml", topdown=False):
+            for name in files:
+                s = f"{prefix}:{os.path.join(root, name)}"
+                logger.warning(s)
+                print(s)
+            for name in dirs:
+                s = f"{prefix}:{os.path.join(root, name)}"
+                logger.warning(s)
+                print(s)
+    ls_opt("opt:before")
 
-        # Saves the model to s3
-        trainer.save_model(args.model_dir)
+    try:
+        main(param_dict)
+    finally:
+        ls_opt("opt:after")

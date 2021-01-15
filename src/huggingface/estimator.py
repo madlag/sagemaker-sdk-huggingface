@@ -34,7 +34,7 @@ class HuggingFace(Framework):
     # FIXME: Sagemaker currently only supports images from private ecr not public ecr
     # _public_ecr_template_string = "public.ecr.aws/t6m7g5n4/huggingface-{type}:0.0.1-{device}-transformers{transformers_version}-datasets{datasets_version}"
     _ecr_template_string = "558105141721.dkr.ecr.eu-central-1.amazonaws.com/huggingface-{type}:0.0.1-{device}-transformers{transformers_version}-datasets{datasets_version}"
-    _ecr_template_string = "854676674973.dkr.ecr.eu-west-1.amazonaws.com/huggingface-nn-pruning-training:0.0.1-gpu-transformers4.1.1-datasets1.1.3-cu110"
+    _ecr_template_string = "854676674973.dkr.ecr.eu-west-1.amazonaws.com/huggingface-nn-pruning-training:0.0.1-gpu-transformers4.1.1-datasets1.1.3"
 
     def __init__(
         self,
@@ -90,12 +90,14 @@ class HuggingFace(Framework):
 
         # checking for instance_type
         if "instance_type" in kwargs:
-            self.instance_type = kwargs["instance_type"]
+            instance_type = kwargs["instance_type"]
         else:
-            self.instance_type = "local"
+            instance_type = "local"
 
         # build ecr_uri
-        self.image_uri = self._get_container_image("training")
+        self.image_uri = self._get_container_image("training", instance_type)
+
+        self.instance_type = instance_type.split("-")[0]
 
         # using or create a sagemaker session
         if "sagemaker_session" in kwargs:
@@ -148,17 +150,18 @@ class HuggingFace(Framework):
     def plot_result(self, metrics="all"):
         return plot_results(self, metrics)
 
-    def _get_container_image(self, container_type: str) -> str:
+    def _get_container_image(self, container_type: str, instance_type) -> str:
         """return container image ecr url"""
-        device = get_container_device(self.instance_type)
+        device = get_container_device(instance_type)
         image_uri = self._ecr_template_string.format(
             device=device,
             transformers_version=self.framework_version["transformers"],
             datasets_version=self.framework_version["datasets"],
             type=container_type,
         )
-        if device == "gpu":
+        if device == "gpu" or True:
             image_uri = f"{image_uri}-cu110"
+        print("IMAGE_URI", image_uri)
         return image_uri
 
     def create_model(
